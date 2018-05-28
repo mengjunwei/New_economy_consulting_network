@@ -154,6 +154,24 @@ $(function(){
         }
 
         // 发起注册请求
+        var params = {
+            'mobile':mobile,
+            'smscode':smscode,
+            'password':password
+        }
+        $.ajax({
+            url:'/passport/register',
+            type:'post',
+            data:JSON.stringify(params),
+            contentType:'application/json',
+            success:function (response) {
+                if (response.errno == '0'){
+                    location.reload()
+                } else {
+                    alert(response.errmsg)
+                }
+            }
+        })
 
     })
 })
@@ -187,6 +205,43 @@ function sendSMSCode() {
     }
 
     // TODO 发送短信验证码
+    var params = {
+        'mobile':mobile,
+        'image_code':imageCode,
+        'image_code_id':imageCodeId
+    }
+    $.ajax({
+        url:'/passport/sms_code',
+        type:'post',
+        data:JSON.stringify(params),
+        contentType:'application/json',
+        success:function (response) {
+            if (response.errno == '0'){
+                 // 倒计时60秒，60秒后允许用户再次点击发送短信验证码的按钮
+                var num = 60;
+                // 设置一个计时器
+                var t = setInterval(function () {
+                    if (num == 1) {
+                        // 如果计时器到最后, 清除计时器对象
+                        clearInterval(t);
+                        // 将点击获取验证码的按钮展示的文本回复成原始文本
+                        $(".get_code").html("获取验证码");
+                        // 将点击按钮的onclick事件函数恢复回去
+                        $(".get_code").attr("onclick", "sendSMSCode();");
+                    } else {
+                        num -= 1;
+                        // 展示倒计时信息
+                        $(".get_code").html(num + "秒");
+                    }
+                }, 1000)
+            }else{
+                alert(response.errmsg)
+                // 将点击按钮的onclick事件函数恢复回去
+                generateImageCode()
+                $(".get_code").attr("onclick", "sendSMSCode();");
+            }
+        }
+    })
 }
 
 // 调用该函数模拟点击左侧按钮
