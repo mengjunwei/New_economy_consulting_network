@@ -164,6 +164,7 @@ $(function(){
             type:'post',
             data:JSON.stringify(params),
             contentType:'application/json',
+            headers:{'X-CSRFToken':getCookie('csrf_token')},
             success:function (response) {
                 if (response.errno == '0'){
                     location.reload()
@@ -215,6 +216,7 @@ function sendSMSCode() {
         type:'post',
         data:JSON.stringify(params),
         contentType:'application/json',
+        headers:{'X-CSRFToken':getCookie('csrf_token')},
         success:function (response) {
             if (response.errno == '0'){
                  // 倒计时60秒，60秒后允许用户再次点击发送短信验证码的按钮

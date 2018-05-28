@@ -7,6 +7,19 @@ from info.models import User
 import re, random, datetime
 
 
+# @passport_blue.route('/login', methods=['POST'])
+# def login():
+#     '''
+#     1,接受参数（手机号，密码）
+#     2，判断手机号，密码是否为空
+#     3，查询数据库，根据手机号
+#     4.插叙redis数据库，验证是否登录
+#
+#     :return: 响应返回数据
+#     '''
+
+
+
 @passport_blue.route('/register', methods=['POST'])
 def register():
     '''
