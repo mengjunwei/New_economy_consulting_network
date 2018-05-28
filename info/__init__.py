@@ -22,6 +22,7 @@ def setup_log(level):
     logging.getLogger().addHandler(file_log_handler)
 # 全局db
 db = SQLAlchemy()
+redis_store = None
 
 
 def create_app(config_name):
@@ -30,8 +31,11 @@ def create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(configs[config_name])
     db.init_app(app)
+    global redis_store
     redis_store = StrictRedis(host=Config.REDIS_HOST, port=Config.REDIS_PORT)
     CSRFProtect(app)
     Session(app)
+    from info.modules.index import index_blue
+    app.register_blueprint(index_blue)
 
     return app
