@@ -1,5 +1,5 @@
 from . import index_blue
-from flask import  render_template, current_app
+from flask import render_template, current_app
 
 
 @index_blue.route('/')
