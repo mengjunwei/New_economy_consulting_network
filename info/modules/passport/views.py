@@ -7,17 +7,60 @@ from info.models import User
 import re, random, datetime
 
 
-# @passport_blue.route('/login', methods=['POST'])
-# def login():
-#     '''
-#     1,接受参数（手机号，密码）
-#     2，判断手机号，密码是否为空
-#     3，查询数据库，根据手机号
-#     4.插叙redis数据库，验证是否登录
-#
-#     :return: 响应返回数据
-#     '''
+@passport_blue.route('/login', methods=['POST'])
+def login():
+    '''
+    1,接受参数（手机号，密码明文）
+    2，判断手机号，密码是否为空
+    3，验证手机号格式是否正确
+    4，查询数据库，根据手机号
+    5,手机号存在，查询密码是否一致
+    6.将登录时间同步至mysql数据库
+    7.将登录状态redis数据库，
+    :return: 响应返回数据
+    '''
+    # 1,接受参数（手机号，密码）
+    json_dict = request.json
+    mobile = json_dict.get('mobile')
+    password = json_dict.get('password')
 
+    #2，判断手机号，密码是否为空
+    if not all([mobile, password]):
+        return jsonify(errno=response_code.RET.PARAMERR, errmsg='参数缺少')
+
+    # 3，验证手机号格式是否正确
+    if not re.match(r'^1[345678]\d{9}$', mobile):
+        return jsonify(errno=response_code.RET.PARAMERR, errmsg='手机号格式错误')
+
+    #4查询数据库，根据手机号
+    try:
+        user = User.query.filter(User.mobile == mobile).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=response_code.RET.DBERR, errmsg='查询用户数据失败')
+    if not user:
+        return jsonify(errno=response_code.RET.DATAERR, errmsg='手机或密码错误')
+
+    #手机号存在，查询密码是否一致
+    if not user.check_passowrd(password):
+        return jsonify(errno=response_code.RET.DATAERR, errmsg='手机或密码错误')
+
+    #更新mysql数据库中登录时间，
+    user.last_login = datetime.datetime.now()
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=response_code.RET.DBERR, errmsg='更新登录时间失败')
+
+    #  将登录状态redis数据库
+    session['user_id'] = user.id
+    session['nick_name'] = user.nick_name
+    session['mobile'] = mobile
+
+    #响应登录结果
+    return jsonify(errno=response_code.RET.OK, errmsg='登录成功')
 
 
 @passport_blue.route('/register', methods=['POST'])
