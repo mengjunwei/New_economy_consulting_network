@@ -7,6 +7,23 @@ from info.models import User
 import re, random, datetime
 
 
+@passport_blue.route('/logout')
+def logout():
+    '''
+    1,删除session中的数据
+    :return: 
+    '''
+    try:
+        session.pop('user_id', None)
+        session.pop('nick_name', None)
+        session.pop('mobile', None)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=response_code.RET.DBERR, errmsg='删除session数据失败')
+
+    return jsonify(errno=response_code.RET.OK, errmsg='退出登录成功')
+
+
 @passport_blue.route('/login', methods=['POST'])
 def login():
     '''

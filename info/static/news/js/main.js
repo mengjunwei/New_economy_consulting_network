@@ -194,6 +194,18 @@ $(function(){
 
     })
 })
+// 退出登录
+function logOut() {
+    $.get(
+    '/passport/logout',
+    function (response) {
+        if (response.errno == '0'){
+            location.reload()
+        }else {
+            alert(response.errmsg)
+        }
+    })
+}
 
 var imageCodeId = ""
 
