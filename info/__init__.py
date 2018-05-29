@@ -6,6 +6,7 @@ from redis import StrictRedis
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from flask_session import Session
 from config import configs, Config
+from info.utils.common import do_rank
 
 
 #日志记录
@@ -45,5 +46,6 @@ def create_app(config_name):
     app.register_blueprint(index_blue)
     from info.modules.passport import passport_blue
     app.register_blueprint(passport_blue)
+    app.add_template_filter(do_rank, 'rank')
 
     return app
