@@ -1,7 +1,8 @@
 from . import index_blue
-from flask import render_template, current_app, session, jsonify,request
+from flask import render_template, current_app, session, jsonify, request, g
 from info.models import User, News
 from info import constants, response_code
+from info.utils.common import user_login_data
 
 
 @index_blue.route('/news_list')
@@ -50,19 +51,15 @@ def index_news_list():
 
 
 @index_blue.route('/')
+@user_login_data
 def index():
     '''
     1,查询用户登录状态
     2，点击排行数据的显示
     :return: 
     '''
-    user_id = session.get('user_id', None)
-    user = None
-    if user_id:
-        try:
-            user = User.query.get(user_id)
-        except Exception as e:
-            current_app.logger.error(e)
+    user = g.user
+
     news_click = None
     try:
         news_click = News.query.order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
