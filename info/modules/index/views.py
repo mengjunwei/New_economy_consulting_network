@@ -1,6 +1,6 @@
 from . import index_blue
 from flask import render_template, current_app, session, jsonify, request, g
-from info.models import User, News
+from info.models import News, Category
 from info import constants, response_code
 from info.utils.common import user_login_data
 
@@ -55,20 +55,30 @@ def index_news_list():
 def index():
     '''
     1,查询用户登录状态
-    2，点击排行数据的显示
+    2点击排行数据的显示
     :return: 
     '''
+    #1,查询用户登录状态
     user = g.user
 
+    #2点击排行数据的显示
     news_click = None
     try:
         news_click = News.query.order_by(News.clicks.desc()).limit(constants.CLICK_RANK_MAX_NEWS)
     except Exception as e:
         current_app.logger.error(e)
 
+    #查看新闻分类，渲染到模板中
+    categorys = []
+    try:
+        categorys = Category.query.all()
+    except Exception as e:
+        current_app.logger.error(e)
+
     content = {
         'user':user,
-        'news_click':news_click
+        'news_click':news_click,
+        'categorys':categorys
     }
     return render_template('news/index.html', content=content)
 
