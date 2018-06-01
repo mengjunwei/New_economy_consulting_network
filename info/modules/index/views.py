@@ -49,8 +49,6 @@ def index_news_list():
     return jsonify(errno=response_code.RET.OK, errmsg='OK', data=data)
 
 
-
-
 @index_blue.route('/')
 def index():
     '''

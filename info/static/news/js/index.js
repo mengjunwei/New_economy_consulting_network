@@ -5,25 +5,25 @@ var data_querying = true;   // 是否正在向后台获取数据
 
 
 $(function () {
-    updateNewsData()
+    updateNewsData();
     // 首页分类切换
     $('.menu li').click(function () {
-        var clickCid = $(this).attr('data-cid')
+        var clickCid = $(this).attr('data-cid');
         $('.menu li').each(function () {
             $(this).removeClass('active')
-        })
-        $(this).addClass('active')
+        });
+        $(this).addClass('active');
 
         if (clickCid != currentCid) {
             // 记录当前分类id
-            currentCid = clickCid
+            currentCid = clickCid;
 
             // 重置分页参数
-            cur_page = 1
-            total_page = 1
+            cur_page = 1;
+            total_page = 1;
             updateNewsData()
         }
-    })
+    });
 
     //页面滚动加载相关
     $(window).scroll(function () {
@@ -42,20 +42,32 @@ $(function () {
 
         if ((canScrollHeight - nowScroll) < 100) {
             // TODO 判断页数，去更新新闻数据
+            if (!data_querying){
+                data_querying = true;
+                cur_page += 1;
+                if (cur_page < total_page){
+                    updateNewsData()
+                }
+            }
         }
     })
-})
+});
 
 function updateNewsData() {
     // TODO 更新新闻数据
     var params = {
         'cid':currentCid,
         'page':cur_page
-    }
-    $.get('/news_list?cid=1&page=1&per_page =10',params,function (response) {
+    };
+    $.get('/news_list', params, function (response) {
+        data_querying = false;
+        if (cur_page == 1){
+            $('.list_con').html('')
+        };
         if (response.errno == '0'){
+            total_page = response.data.total_page;
             for (var i=0;i<response.data.news_dict_list.length;i++) {
-                var news = response.data.news_dict_list[i]
+                var news = response.data.news_dict_list[i];
                 var content = '<li>'
                 content += '<a href="#" class="news_pic fl"><img src="' + news.index_image_url + '?imageView2/1/w/170/h/170"></a>'
                 content += '<a href="#" class="news_title fl">' + news.title + '</a>'
@@ -64,7 +76,7 @@ function updateNewsData() {
                 content += '<div class="source fl">来源：' + news.source + '</div>'
                 content += '<div class="time fl">' + news.create_time + '</div>'
                 content += '</div>'
-                content += '</li>'
+                content += '</li>';
                 $(".list_con").append(content)
             }
         }else{
