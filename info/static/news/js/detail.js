@@ -13,15 +13,53 @@ $(function(){
 
     // 收藏
     $(".collection").click(function () {
-
-       
-    })
+        var params = {
+            'news_id':$('.collection').attr('data_newsid'),
+            'action':'collect',
+        };
+        $.ajax({
+            url:'/news/news_collect',
+            type:'post',
+            data:JSON.stringify(params),
+            contentType:'application/json',
+            headers:{'X-CSRFToken':getCookie('csrf_token')},
+            success:function (response) {
+                if (response.errno == '0'){
+                    $(".collection").hide()
+                    $(".collected").show()
+                } else if(response.errno == '4001'){
+                    $('.login_form_con').show();
+                } else {
+                    alert(response.errmsg)
+                }
+            }
+        });
+    });
 
     // 取消收藏
     $(".collected").click(function () {
-
-     
-    })
+        var params = {
+            'news_id':$('.collection').attr('data_newsid'),
+            'action':'cancel_collect',
+        };
+        $.ajax({
+            url:'/news/news_collect',
+            type:'post',
+            data:JSON.stringify(params),
+            contentType:'application/json',
+            headers:{'X-CSRFToken':getCookie('csrf_token')},
+            success:function (response) {
+                if (response.errno == '0'){
+                    $(".collected").hide()
+                    $(".collection").show()
+                } else if(response.errno == '4001'){
+                    $('.login_form_con').show();
+                } else {
+                    alert(response.errmsg)
+                }
+            }
+        });
+    });
 
         // 评论提交
     $(".comment_form").submit(function (e) {

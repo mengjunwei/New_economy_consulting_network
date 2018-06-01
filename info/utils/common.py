@@ -17,11 +17,9 @@ def do_rank(value):
 
 
 def user_login_data(view_func):
-    wraps(view_func)
+    @wraps(view_func)
     def wrapper(*args, **kwargs):
         user_id = session.get('user_id', None)
-        if not user_id:
-            return jsonify(errno=response_code.RET.NODATA, errmsg='用户未登录')
         user = None
         try:
             user = User.query.get(user_id)
