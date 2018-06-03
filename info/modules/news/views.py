@@ -188,7 +188,7 @@ def news_detal(news_id):
     #6.查询该新闻的所有评论
     comments = None
     try:
-        comments = Comment.query.filter(Comment.news_id==news_id)
+        comments = Comment.query.filter(Comment.news_id==news_id).order_by(Comment.create_time.desc()).all()
     except Exception as e:
         current_app.logger.error(e)
     comments_dict_list = []
