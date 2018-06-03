@@ -15,10 +15,10 @@
             <a href="/" class="logo fl"><img src="../../static/news/images/logo.png" alt="logo"></a>
             {% block menu_category %}{% endblock menu_category%}
             {% block login %}
-                {% if content.user %}
+                {% if context.user %}
                     <div class="user_login fr">
                         <img src="../../static/news/images/person01.png" class="lgin_pic">
-                        <a href="#">{{ content.user.nick_name }}</a>
+                        <a href="#">{{ context.user.nick_name }}</a>
                         <a href="#" onclick="logOut()">退出</a>
                     </div>
                 {% else %}

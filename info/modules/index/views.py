@@ -75,12 +75,12 @@ def index():
     except Exception as e:
         current_app.logger.error(e)
 
-    content = {
+    context = {
         'user':user,
         'news_click':news_click,
         'categorys':categorys
     }
-    return render_template('news/index.html', content=content)
+    return render_template('news/index.html', context=context)
 
 
 @index_blue.route('/favicon.ico')

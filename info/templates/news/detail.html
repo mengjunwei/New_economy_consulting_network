@@ -11,17 +11,19 @@
 {% block content %}
     <div class="conter_con">
         <div class="detail_con fl">
-            <h3>{{ content.news.title }}</h3>
+            <h3>{{ context.news.title }}</h3>
             <div class="detail_about clearfix">
-                <span class="time_souce fl">{{ content.news.create_time }} 来源: {{ content.news.source }}</span>
-                <span class="comment fr">{{ content.news.comments_count }}</span>
+                <span class="time_souce fl">{{ context.news.create_time }} 来源: {{ context.news.source }}</span>
+                <span class="comment fr">{{ context.news.comments_count }}</span>
             </div>
-            {{ content.news.content | safe}}
+            {{ context.news.content | safe}}
 
-            <a href="javascript:;" class="collection block-center" data_newsid="{{ content.news.id }}">收藏</a>
-            <a href="javascript:;" class="collected block-center" style="display: none"><span class="out" data_newsid="{{ content.news.id }}">已收藏</span><span class="over">取消收藏</span></a>
 
-            {% if content.user %}
+                <a href="javascript:;" class="collected block-center " style="display: {% if context.is_collect %}block{% else %}none{% endif %}"><span class="out" data_newsid="{{ context.news.id }}">已收藏</span><span class="over">取消收藏</span></a>
+                <a href="javascript:;" class="collection block-center" style="display: {% if context.is_collect %}none{% else %}block{% endif %}" data_newsid="{{ context.news.id }}">收藏</a>
+
+
+            {% if context.user %}
                 <form action="" class="comment_form">
                 <div class="person_pic">
                     <img src="../../static/news/images/cat.jpg" alt="用户图标">
@@ -35,7 +37,7 @@
                  </div>
             {% endif %}
             <div class="comment_count">
-                {{ content.news.comments_count }}条评论
+                {{ context.news.comments_count }}条评论
             </div>
 
             <div class="comment_list_con">
@@ -132,7 +134,7 @@
                 <h3>点击排行</h3>
             </div>
             <ul class="rank_list">
-                {% for news in content.news_clicks %}
+                {% for news in context.news_clicks %}
                     <li><span class="{{ loop.index | rank }}">{{ loop.index }}</span><a href="#">{{ news.title }}</a></li>
                 {% endfor %}
             </ul>

@@ -9,7 +9,7 @@
 
 {% block menu_category %}
     <ul class="menu fl">
-        {% for category in content.categorys %}
+        {% for category in context.categorys %}
             {% if loop.index == 1 %}
                  <li class="active" data-cid="{{ category.id }}"><a href="javascript:;">{{ category.name }}</a></li>
             {% else %}
@@ -28,7 +28,7 @@
                 <h3>点击排行</h3>
             </div>
             <ul class="rank_list">
-                {% for news in content.news_click %}
+                {% for news in context.news_click %}
                     <li><span class="{{ loop.index | rank }}">{{ loop.index }}</span><a href="#">{{ news.title }}</a></li>
                 {% endfor %}
             </ul>

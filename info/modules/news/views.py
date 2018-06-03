@@ -9,7 +9,13 @@ from info import constants, response_code, db
 @user_login_data
 def news_collect():
     '''
-    
+    1，查看用户是否登录
+    2,接受参数，判断参数是否合法
+    3，根据news_id 查找news对象
+    4,查询该用户收藏的新闻列表
+    5收藏的增加与取消
+    6同步到数据库中
+    7返回响应
     :return: 
     '''
     # 1，查看用户是否登录
@@ -25,7 +31,6 @@ def news_collect():
         return jsonify(errno=response_code.RET.PARAMERR, errmsg='参数错误')
 
     #3，根据news_id 查找news对象
-    news = None
     try:
         news = News.query.get(news_id)
     except Exception as e:
@@ -41,7 +46,7 @@ def news_collect():
         current_app.logger.error(e)
         return jsonify(errno=response_code.RET.DBERR, errmsg='查询收藏的新闻列表失败')
 
-    5#收藏的增加与取消
+    #5收藏的增加与取消
     if action == 'collect':
         if news not in user_news_list:
             user_news_list.append(news)
@@ -58,10 +63,6 @@ def news_collect():
 
     #7返回响应
     return jsonify(errno=response_code.RET.OK, errmsg='操作成功')
-
-
-
-
 
 
 @news_blue.route('/news_detal/<int:news_id>')
@@ -102,10 +103,16 @@ def news_detal(news_id):
         current_app.logger.error(e)
         return jsonify(errno=response_code.RET.DBERR, errmsg='跟新新闻点击量失败')
 
-    content = {
+    #5.判断该新闻是否被该登录用户收藏，以便界面显示
+
+    is_collect = False
+    if news in user.collection_news:
+        is_collect = True
+
+    context = {
         'user':user,
         'news':news.to_dict(),
         'news_clicks':news_clicks,
-
+        'is_collect':is_collect
     }
-    return render_template('news/detail.html', content=content)
+    return render_template('news/detail.html', context=context)
