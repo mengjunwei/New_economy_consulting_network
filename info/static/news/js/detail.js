@@ -9,13 +9,13 @@ $(function(){
     // 打开登录框
     $('.comment_form_logout').click(function () {
         $('.login_form_con').show();
-    })
+    });
 
     // 收藏
     $(".collection").click(function () {
         var params = {
             'news_id':$('.collection').attr('data_newsid'),
-            'action':'collect',
+            'action':'collect'
         };
         $.ajax({
             url:'/news/news_collect',
@@ -25,7 +25,7 @@ $(function(){
             headers:{'X-CSRFToken':getCookie('csrf_token')},
             success:function (response) {
                 if (response.errno == '0'){
-                    $(".collection").hide()
+                    $(".collection").hide();
                     $(".collected").show()
                 } else if(response.errno == '4101'){
                     $('.login_form_con').show();
@@ -40,7 +40,7 @@ $(function(){
     $(".collected").click(function () {
         var params = {
             'news_id':$('.collection').attr('data_newsid'),
-            'action':'cancel_collect',
+            'action':'cancel_collect'
         };
         $.ajax({
             url:'/news/news_collect',
@@ -50,12 +50,12 @@ $(function(){
             headers:{'X-CSRFToken':getCookie('csrf_token')},
             success:function (response) {
                 if (response.errno == '0'){
-                    $(".collected").hide()
-                    $(".collection").show()
+                    $(".collected").hide();
+                    $(".collection").show();
                 } else if(response.errno == '4101'){
                     $('.login_form_con').show();
                 } else {
-                    alert(response.errmsg)
+                    alert(response.errmsg);
                 }
             }
         });
@@ -64,7 +64,7 @@ $(function(){
         // 评论提交
     $(".comment_form").submit(function (e) {
         e.preventDefault();
-        var news_id = $(this).attr('data-newsid')
+        var news_id = $(this).attr('data-newsid');
         var news_comment = $(".comment_input").val();
 
         if (!news_comment) {
@@ -85,7 +85,7 @@ $(function(){
             data: JSON.stringify(params),
             success: function (resp) {
                 if (resp.errno == '0') {
-                    var comment = resp.data
+                    var comment = resp.data;
                     // 拼接内容
                     var comment_html = ''
                     comment_html += '<div class="comment_list">'
@@ -110,20 +110,20 @@ $(function(){
                     comment_html += '<input type="reset" name="" value="取消" class="reply_cancel fr">'
                     comment_html += '</form>'
 
-                    comment_html += '</div>'
+                    comment_html += '</div>';
                     // 拼接到内容的前面
-                    $(".comment_list_con").prepend(comment_html)
+                    $(".comment_list_con").prepend(comment_html);
                     // 让comment_sub 失去焦点
                     $('.comment_sub').blur();
                     // 清空输入框内容
-                    $(".comment_input").val("")
+                    $(".comment_input").val("");
                     updateCommentCount()
                 }else {
                     alert(resp.errmsg)
                 }
             }
         })
-    })
+    });
 
     $('.comment_list_con').delegate('a,input','click',function(){
 
@@ -142,13 +142,60 @@ $(function(){
         if(sHandler.indexOf('comment_up')>=0)
         {
             var $this = $(this);
+            var action = "add";
             if(sHandler.indexOf('has_comment_up')>=0)
             {
                 // 如果当前该评论已经是点赞状态，再次点击会进行到此代码块内，代表要取消点赞
-                $this.removeClass('has_comment_up')
-            }else {
-                $this.addClass('has_comment_up')
+                action = "remove"
             }
+
+            var comment_id = $(this).attr("data-commentid");
+            var news_id = $(this).attr("data-newsid");
+            var params = {
+                "comment_id": comment_id,
+                "action": action,
+                "news_id": news_id
+            }
+
+            $.ajax({
+                url: "/news/news_commentlike",
+                type: "post",
+                contentType: "application/json",
+                headers: {
+                    "X-CSRFToken": getCookie("csrf_token")
+                },
+                data: JSON.stringify(params),
+                success: function (resp) {
+                    if (resp.errno == "0") {
+                        var like_count = $this.attr('data-likecount')
+
+                        if (like_count == undefined) {
+                            like_count = 0
+                        }
+
+                        // 更新点赞按钮图标
+                        if (action == "add") {
+                            like_count = parseInt(like_count) + 1
+                            // 代表是点赞
+                            $this.addClass('has_comment_up')
+                        }else {
+                            like_count = parseInt(like_count) - 1
+                            $this.removeClass('has_comment_up')
+                        }
+                        // 更新点赞数据
+                        $this.attr('data-likecount', like_count)
+                        if (like_count == 0) {
+                            $this.html("赞")
+                        }else {
+                            $this.html(like_count)
+                        }
+                    }else if (resp.errno == "4101"){
+                        $('.login_form_con').show();
+                    }else {
+                        alert(resp.errmsg)
+                    }
+                }
+            })
         }
 
         if(sHandler.indexOf('reply_sub')>=0)
@@ -177,7 +224,7 @@ $(function(){
                 data: JSON.stringify(params),
                 success: function (resp) {
                     if (resp.errno == "0") {
-                        var comment = resp.data
+                        var comment = resp.data;
                         // 拼接内容
                         var comment_html = ""
                         comment_html += '<div class="comment_list">'
@@ -208,12 +255,12 @@ $(function(){
                         comment_html += '<input type="reset" name="" value="取消" class="reply_cancel fr">'
                         comment_html += '</form>'
 
-                        comment_html += '</div>'
-                        $(".comment_list_con").prepend(comment_html)
+                        comment_html += '</div>';
+                        $(".comment_list_con").prepend(comment_html);
                         // 请空输入框
-                        $this.prev().val('')
+                        $this.prev().val('');
                         // 关闭
-                        $this.parent().hide()
+                        $this.parent().hide();
                         updateCommentCount()
                     }else {
                         alert(resp.errmsg)
@@ -221,20 +268,20 @@ $(function(){
                 }
             })
         }
-    })
+    });
 
         // 关注当前新闻作者
     $(".focus").click(function () {
 
-    })
+    });
 
     // 取消关注当前新闻作者
     $(".focused").click(function () {
 
     })
-})
+});
 function updateCommentCount() {
-    count = $('.comment_list').length
-    $('.comment_count').html(count + '条评论')
+    count = $('.comment_list').length;
+    $('.comment_count').html(count + '条评论');
     $('.comment').html(count)
 }

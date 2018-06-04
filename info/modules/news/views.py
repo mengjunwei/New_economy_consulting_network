@@ -5,6 +5,81 @@ from info.models import News, Comment, CommentLike
 from info import constants, response_code, db
 
 
+@news_blue.route('/news_commentlike', methods=['POST'])
+@user_login_data
+def news_commentlike():
+    '''
+    1.判断用户是否登录，只有用户登录才能进行评论
+    2.接受参数
+    3.校验参数
+    4.根据评论ID查询数据库，判断评论是否存在
+    5查询是否该用户是否已经对该评论点赞
+    6点赞和取消点赞
+    7将结果同步到数据
+    :return: 返回结果
+    '''
+
+    #1.判断用户是否登录，只有用户登录才能进行评论
+    user = g.user
+    if not user:
+        return jsonify(errno=response_code.RET.SESSIONERR, errmsg='用户未登录')
+
+    #2.接受参数
+    comment_id = request.json.get('comment_id')
+    action = request.json.get('action')
+
+    #3.校验参数
+    if not all ([comment_id, action]):
+        return jsonify(errno=response_code.RET.PARAMERR, errmsg='缺少参数')
+    try:
+        comment_id = int(comment_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=response_code.RET.PARAMERR, errmsg='参数错误')
+    if action not in ['add', 'remove']:
+        return jsonify(errno=response_code.RET.PARAMERR, errmsg='参数错误')
+
+    #4.根据评论ID查询数据库，判断评论是否存在
+    try:
+        comment = Comment.query.get(comment_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=response_code.RET.DBERR, errmsg='查询点赞评论失败')
+    if not comment:
+        return jsonify(errno=response_code.RET.NODATA, errmsg='评论不存在')
+
+    #5查询是否该用户是否已经对该评论点赞
+    try:
+        commentlike = CommentLike.query.filter(CommentLike.user_id==user.id, CommentLike.comment_id==comment_id).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=response_code.RET.DBERR, errmsg='查询点赞失败')
+
+    #6点赞和取消点赞
+    if action == 'add':
+        if not commentlike:
+            comment_like = CommentLike()
+            comment_like.user_id = user.id
+            comment_like.comment_id = comment_id
+            comment.like_count += 1
+            db.session.add(comment_like)
+
+    else:
+        if commentlike:
+            comment.like_count -= 1
+            db.session.delete(commentlike)
+
+    #7将结果同步到数据库
+    try:
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(errno=response_code.RET.DBERR, errmsg='更新点赞失败')
+
+    #8返回结果
+    return jsonify(errno=response_code.RET.OK, errmsg='操作成功')
+
+
 @news_blue.route('/news_comment', methods=['POST'])
 @user_login_data
 def news_comment():
@@ -18,6 +93,7 @@ def news_comment():
     7.同步到数据库
     :return: 返回结果响应
     '''
+
     #1.判断用户是否登录，只有登录用户才能进行评论
     user = g.user
     if not user:
@@ -91,6 +167,7 @@ def news_collect():
     7返回响应
     :return: 
     '''
+
     # 1，查看用户是否登录
     user = g.user
     if not user:
@@ -151,6 +228,7 @@ def news_detal(news_id):
     :param news_id: 
     :return: 
     '''
+
     #1，查看用户是否登录
     user = g.user
 
@@ -179,7 +257,6 @@ def news_detal(news_id):
         return jsonify(errno=response_code.RET.DBERR, errmsg='跟新新闻点击量失败')
 
     #5.判断该新闻是否被该登录用户收藏，以便界面显示
-
     is_collect = False
     if user:
         if news in user.collection_news:
@@ -188,13 +265,22 @@ def news_detal(news_id):
     #6.查询该新闻的所有评论
     comments = None
     try:
-        comments = Comment.query.filter(Comment.news_id==news_id).order_by(Comment.create_time.desc()).all()
+        comments = Comment.query.filter(Comment.news_id == news_id).order_by(Comment.create_time.desc()).all()
     except Exception as e:
         current_app.logger.error(e)
     comments_dict_list = []
     if comments:
         for comment in comments:
+            commentlike = None
+            try:
+                commentlike = CommentLike.query.filter(CommentLike.comment_id == comment.id, CommentLike.user_id == user.id).first()
+            except Exception as e:
+                current_app.logger.error(e)
             comment_dict = comment.to_dict()
+            if not commentlike:
+                comment_dict['is_commentlike'] = False
+            else:
+                comment_dict['is_commentlike'] = True
             comments_dict_list.append(comment_dict)
 
     context = {
