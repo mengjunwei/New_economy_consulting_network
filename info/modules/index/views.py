@@ -76,7 +76,7 @@ def index():
         current_app.logger.error(e)
 
     context = {
-        'user':user,
+        'user':user.to_dict() if user else None,
         'news_click':news_click,
         'categorys':categorys
     }

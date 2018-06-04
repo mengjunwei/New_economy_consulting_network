@@ -47,6 +47,8 @@ def create_app(config_name):
     app.register_blueprint(passport_blue)
     from info.modules.news import news_blue
     app.register_blueprint(news_blue)
+    from info.modules.profile import profile_blue
+    app.register_blueprint(profile_blue)
     from info.utils.common import do_rank
     app.add_template_filter(do_rank, 'rank')
 

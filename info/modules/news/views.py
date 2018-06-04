@@ -284,7 +284,7 @@ def news_detal(news_id):
             comments_dict_list.append(comment_dict)
 
     context = {
-        'user':user,
+        'user':user.to_dict() if user else None,
         'news':news.to_dict(),
         'news_clicks':news_clicks,
         'is_collect':is_collect,
