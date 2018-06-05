@@ -3,17 +3,101 @@ from info.utils.common import user_login_data
 from flask import render_template, g, jsonify, current_app, redirect, url_for, request, session
 from info import response_code, db, constants
 from info.utils.file_storage import upload_file
-# from info.models import User
+from info.models import Category, News
+
+
+@profile_blue.route('/news_release', methods=['POST', 'GET'])
+@user_login_data
+def user_news_release():
+    '''
+    1.判断是否登录，若未登录，重定向到首页
+    2若请求方式为get请求，则渲染模板
+    3.若为post请求，则接受参数
+    3.1校验参数
+    3.2将图片上传至七牛云
+    3.3创建新闻模型对象
+    3.4同步至数据库中
+    :return: 返回响应结果
+    '''
+    # 1.判断是否登录，若未登录，重定向到首页
+    user = g.user
+    if not user:
+        return redirect(url_for('index.index'))
+
+    #2若请求方式为get请求，则渲染模板
+    if request.method == 'GET':
+        category = []
+        try:
+            category = Category.query.all()
+        except Exception as e:
+            current_app.logger.error(e)
+        category.pop(0)
+        context = {
+            'categorys':category
+        }
+        return render_template('news/user_news_release.html', context=context)
+
+    #3.若为post请求，则接受参数
+    if request.method == 'POST':
+        title = request.form.get('title')
+        source = user.nick_name
+        category_id = request.form.get('category_id')
+        digest = request.form.get('digest')
+        index_image = request.files.get('index_image')
+        content = request.form.get('content')
+
+        #3.1校验参数
+        if not all([title, category_id, digest, index_image, content]):
+            return jsonify(errno=response_code.RET.PARAMERR, errmsg='缺少参数')
+        try:
+            index_image_data = index_image.read()
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=response_code.RET.PARAMERR, errmsg='读取图片失败')
+
+        #3.2将图片上传至七牛云
+        try:
+            key = upload_file(index_image_data)
+        except Exception as e:
+            current_app.logger.error(e)
+            return jsonify(errno=response_code.RET.THIRDERR, errmsg='上传至云服务错误')
+
+        #3.3创建新闻模型对象
+        news = News()
+        news.title = title
+        news.category_id = category_id
+        news.digest = digest
+        news.index_image_url = constants.QINIU_DOMIN_PREFIX + key
+        news.content = content
+        news.source = source
+        news.status = 1
+
+        #3.4同步至数据库中
+        try:
+            db.session.add(news)
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            return jsonify(errno=response_code.RET.DBERR, errmsg='保存新闻失败')
+
+        #3.5返回响应结果
+        return jsonify(errno=response_code.RET.OK, errmsg='上传新闻成功')
 
 
 @profile_blue.route('/collection_info')
 @user_login_data
 def collection_info():
     '''
-    
+    1.判断是否登录，若未登录，重定向到首页
+    2.接受参数
+    3.校验参数
+    4.根据查找页进行数据的分页查找
+    5.返回数据
+    6.渲染模板
     :return: 
     '''
-    # 1.判断是否登录，若未登录，重定向到首页
+    #1.判断是否登录，若未登录，重定向到首页
     user = g.user
     if not user:
         return redirect(url_for('index.index'))
