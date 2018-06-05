@@ -29,7 +29,7 @@
             </div>
             <ul class="rank_list">
                 {% for news in context.news_click %}
-                    <li><span class="{{ loop.index | rank }}">{{ loop.index }}</span><a href="#">{{ news.title }}</a></li>
+                    <li><span class="{{ loop.index | rank }}">{{ loop.index }}</span><a href="/news/news_detal/{{ news.id }}">{{ news.title }}</a></li>
                 {% endfor %}
             </ul>
         </div>
