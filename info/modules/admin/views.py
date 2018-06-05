@@ -25,8 +25,11 @@ def login():
     '''
     #1.若为get请求，则渲染界面
     if request.method == 'GET':
+        user_id = session.get('user_id', None)
+        is_admin = session.get('is_admin', False)
+        if user_id and is_admin:
+            return render_template(url_for('admin.index'))
         return render_template('admin/login.html')
-
     #2.若为post请求，则接受参数
     if request.method == 'POST':
         password = request.form.get('password')

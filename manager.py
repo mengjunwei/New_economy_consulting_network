@@ -2,7 +2,7 @@ from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from info import create_app, db, models
 from info.models import User
-from flask import session, current_app
+from flask import current_app
 
 
 app = create_app('dev')
@@ -29,9 +29,8 @@ def create_super_user(password, mobile, username):
             db.session.commit()
         except Exception as e:
             current_app.logger.error(e)
-            print(e)
             db.session.rollback()
-
+            print(e)
 
 if __name__ == '__main__':
     print(app.url_map)
