@@ -17,6 +17,8 @@ def logout():
         session.pop('user_id', None)
         session.pop('nick_name', None)
         session.pop('mobile', None)
+        #为了防止管理员误入前台页面，退出登录后留下is_admin，所以无论是谁，退出登录都要删除is_admin
+        session.pop('is_admin', False)
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(errno=response_code.RET.DBERR, errmsg='删除session数据失败')
