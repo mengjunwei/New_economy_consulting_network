@@ -17,7 +17,7 @@
             {% block login %}
                 {% if context.user %}
                     <div class="user_login fr">
-                        <img src="{% if context.user.avatar_url %}{{ context.user.avatar_url }}{% else %}../../static/news/images/user_pic.png{% endif %}" class="lgin_pic">
+                        <a href="{{ url_for('profile.user_info') }}"><img src="{% if context.user.avatar_url %}{{ context.user.avatar_url }}{% else %}../../static/news/images/user_pic.png{% endif %}" class="lgin_pic"></a>
                         <a href="{{ url_for('profile.user_info') }}" id="nick_name">{{ context.user.nick_name }}</a>
                         <a href="#" onclick="logOut()">退出</a>
                     </div>
