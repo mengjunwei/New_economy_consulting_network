@@ -6,6 +6,58 @@ from info.utils.file_storage import upload_file
 from info.models import Category, News
 
 
+@profile_blue.route('news_list')
+@user_login_data
+def user_news_list():
+    '''
+    1.判断是否登录，若未登录，重定向到首页
+    2.接受参数
+    3校验参数
+    4.分页查询
+    5对返回的数据进行处理
+    :return:
+    '''
+    # 1.判断是否登录，若未登录，重定向到首页
+    user = g.user
+    if not user:
+        return redirect(url_for('index.index'))
+
+    #2.接受参数
+    page = request.args.get('p', 1)
+
+    #3校验参数
+    if not page:
+        return jsonify(errno=response_code.RET.PARAMERR, errmsg='缺少参数')
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    #4.分页查询
+    try:
+        paginate = News.query.filter(News.user_id == user.id).paginate(page, constants.HOME_PAGE_MAX_NEWS, False)
+        news_list = paginate.items
+        total_page = paginate.pages
+        current_page = paginate.page
+    except Exception as e:
+        current_app.logger.error(e)
+        news_list = []
+        total_page = 1
+        current_page = 1
+
+    #5对返回的数据进行处理
+    news_dict_list = []
+    for news in news_list:
+        news_dict_list.append(news.to_review_dict())
+    context = {
+        'news_list':news_dict_list,
+        'total_page':total_page,
+        'current_page':current_page
+    }
+
+    return render_template('news/user_news_list.html', context=context)
+
+
 @profile_blue.route('/news_release', methods=['POST', 'GET'])
 @user_login_data
 def user_news_release():
@@ -71,6 +123,7 @@ def user_news_release():
         news.content = content
         news.source = source
         news.status = 1
+        news.user_id = user.id
 
         #3.4同步至数据库中
         try:
