@@ -3,14 +3,119 @@ from info.utils.common import user_login_data
 from flask import render_template, g, jsonify, current_app, redirect, url_for, request, session
 from info import response_code, db, constants
 from info.utils.file_storage import upload_file
+# from info.models import User
+
+
+@profile_blue.route('/collection_info')
+@user_login_data
+def collection_info():
+    '''
+    
+    :return: 
+    '''
+    # 1.判断是否登录，若未登录，重定向到首页
+    user = g.user
+    if not user:
+        return redirect(url_for('index.index'))
+
+    #2接受参数
+    page = request.args.get('p', 1)
+
+    #3校验参数
+    try:
+        page = int(page)
+    except Exception as e:
+        current_app.logger.error(e)
+        page = 1
+
+    current_page = 1
+    total_page = 1
+    collections = []
+    #4.根据查找页进行数据的分页查找
+    try:
+        paginate = user.collection_news.paginate(page, constants.USER_COLLECTION_MAX_NEWS, False)
+        current_page = paginate.page
+        total_page = paginate.pages
+        collections = paginate.items
+    except Exception as e:
+        current_app.logger.error(e)
+
+    #5.返回数据
+    collections_dict_list = []
+    for collection in collections:
+        collections_dict_list.append(collection.to_basic_dict())
+    context = {
+        'current_page':current_page,
+        'total_page':total_page,
+        'collections':collections_dict_list
+    }
+
+    #6渲染模板
+    return render_template('news/user_collection.html', context=context)
+
+
+@profile_blue.route('/pass_info', methods=['POST', 'GET'])
+@user_login_data
+def pass_info():
+    '''
+    1.判断是否登录，若未登录，重定向到首页
+    2.若请求方法是get，则渲染基本信息界面
+    3.若请求方法为post，接受参数
+    3.1校验参数
+    3.2检验密码是否正确
+    3.3将新密码同步到数据库
+    :return: 返回响应
+    '''
+    # 1.判断是否登录，若未登录，重定向到首页
+    user = g.user
+    if not user:
+        return redirect(url_for('index.index'))
+
+    # 2.若请求方法是get，则渲染基本信息界面
+    if request.method == 'GET':
+        context = {
+            'user': user
+        }
+        return render_template('news/user_pass_info.html', context=context)
+
+    # 3.若请求方法为post，接受参数
+    if request.method == 'POST':
+        old_password = request.json.get('old_password')
+        new_password = request.json.get('new_password')
+
+        #3.1校验参数
+        if not all([old_password, new_password]):
+            return jsonify(errno=response_code.RET.PARAMERR, errmsg='缺少参数')
+
+        #3.2检验密码是否正确
+        if not user.check_passowrd(old_password):
+            return jsonify(errno=response_code.RET.PARAMERR, errmsg='密码或账号输入错误')
+
+        #3.3将新密码同步到数据库
+        user.password = new_password
+        try:
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            return jsonify(errno=response_code.RET.DBERR, errmsg='保存密码失败')
+
+        #3.4返回响应
+        return jsonify(errno=response_code.RET.OK, errmsg='修改密码成功')
 
 
 @profile_blue.route('/pic_info', methods=['POST', 'GET'])
 @user_login_data
-def pic_data():
+def pic_info():
     '''
-    
-    :return: 
+    1.判断是否登录，若未登录，重定向到首页
+    2.若请求方法是get，则渲染基本信息界面
+    3.若请求方法为post，接受参数
+    #4.校验参数
+    5.上传至七牛云
+    6.更新头像路径
+    7.同步到数据库
+    :return: 返回响应
     '''
     # 1.判断是否登录，若未登录，重定向到首页
     user = g.user
