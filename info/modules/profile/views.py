@@ -6,7 +6,7 @@ from info.utils.file_storage import upload_file
 from info.models import Category, News
 
 
-@profile_blue.route('news_list')
+@profile_blue.route('/news_list')
 @user_login_data
 def user_news_list():
     '''

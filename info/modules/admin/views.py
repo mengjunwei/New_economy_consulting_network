@@ -2,8 +2,60 @@ from . import admin_blue
 from flask import current_app, render_template, redirect, url_for, request, session, g
 from info.models import User
 from info.utils.common import user_login_data
+import time, datetime
 
-@admin_blue.route('/index')
+
+@admin_blue.route('/user_count')
+@user_login_data
+def user_count():
+    '''
+    
+    :return: 
+    '''
+    # # 1.判断是否是登录用户，若是登录用户
+    # user = g.user
+    # if not user:
+    #     return redirect(url_for('admin/login'))
+
+    #2查询总用户数
+    total_count = 0
+    try:
+        total_count = User.query.filter(User.is_admin == False).count()
+    except Exception as e:
+        current_app.logger.error(e)
+
+    #查询每月新增数
+    mouth_count = 0
+    # 计算每月开始时间 比如：2018-06-01 00：00：00
+    t = time.localtime()
+    # 计算每月开始时间字符串
+    month_begin = '%d-%02d-01' % (t.tm_year, t.tm_mon)
+    # 计算每月开始时间对象
+    month_begin_date = datetime.datetime.strptime(month_begin, '%Y-%m-%d')
+    try:
+        mouth_count = User.query.filter(User.is_admin == False, User.create_time>month_begin_date).count()
+    except Exception as e:
+        current_app.logger.error(e)
+
+    #日新增量
+    day_count = 0
+    t = time.localtime()
+    day_begin = '%d-%02d-%02d' % (t.tm_year, t.tm_mon, t.tm_mday)
+    day_begin_date = datetime.datetime.strptime(day_begin, '%Y-%m-%d')
+    try:
+        day_count = User.query.filter(User.is_admin == False, User.create_time > day_begin_date).count()
+    except Exception as e:
+        current_app.logger.error(e)
+
+    context = {
+        'total_count':total_count,
+        'mouth_count':mouth_count,
+        'day_count':day_count
+    }
+
+    return render_template('admin/user_count.html', context=context)
+
+@admin_blue.route('/')
 @user_login_data
 def index():
     '''
