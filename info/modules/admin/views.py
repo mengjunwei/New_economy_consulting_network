@@ -1,15 +1,24 @@
 from . import admin_blue
-from flask import current_app, render_template, redirect, url_for, request, session
+from flask import current_app, render_template, redirect, url_for, request, session, g
 from info.models import User
-
+from info.utils.common import user_login_data
 
 @admin_blue.route('/index')
+@user_login_data
 def index():
     '''
     
     :return: 
     '''
-    return render_template('admin/index.html')
+    #1.判断是否是登录用户，若是登录用户
+    user = g.user
+    if not user:
+        return redirect(url_for('admin/login'))
+
+    context = {
+        'user':user.to_dict() if user else None
+    }
+    return render_template('admin/index.html', context=context)
 
 
 @admin_blue.route('/login', methods=['POST', 'GET'])
@@ -30,6 +39,7 @@ def login():
         if user_id and is_admin:
             return render_template(url_for('admin.index'))
         return render_template('admin/login.html')
+
     #2.若为post请求，则接受参数
     if request.method == 'POST':
         password = request.form.get('password')
