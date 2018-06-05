@@ -1,6 +1,6 @@
 from . import news_blue
 from info.utils.common import user_login_data
-from flask import render_template, g, current_app, jsonify, request
+from flask import render_template, g, current_app, jsonify, request, abort
 from info.models import News, Comment, CommentLike
 from info import constants, response_code, db
 
@@ -249,7 +249,11 @@ def news_detal(news_id):
         return jsonify(errno=response_code.RET.DBERR, errmsg='查询新闻数据错误')
 
     #4，新闻点击量加1
-    news.clicks += 1
+    if news:
+        news.clicks += 1
+    else:
+        abort(404)
+
     try:
         db.session.commit()
     except Exception as e:
@@ -285,7 +289,7 @@ def news_detal(news_id):
 
     context = {
         'user':user.to_dict() if user else None,
-        'news':news.to_dict(),
+        'news':news.to_dict() if news else None,
         'news_clicks':news_clicks,
         'is_collect':is_collect,
         'comments':comments_dict_list

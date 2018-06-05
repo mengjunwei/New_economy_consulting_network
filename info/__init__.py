@@ -1,6 +1,6 @@
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask
+from flask import Flask, render_template, g
 from flask_sqlalchemy import SQLAlchemy
 from redis import StrictRedis
 from flask_wtf.csrf import CSRFProtect, generate_csrf
@@ -49,7 +49,20 @@ def create_app(config_name):
     app.register_blueprint(news_blue)
     from info.modules.profile import profile_blue
     app.register_blueprint(profile_blue)
+    from info.modules.admin import admin_blue
+    app.register_blueprint(admin_blue)
     from info.utils.common import do_rank
     app.add_template_filter(do_rank, 'rank')
+
+    from info.utils.common import user_login_data
+    @app.errorhandler(404)
+    @user_login_data
+    def err_handlers(e):
+        user = g.user
+        context = {
+            'user': user.to_dict() if user else None
+        }
+        print(e)
+        return render_template('news/404.html', context=context)
 
     return app
